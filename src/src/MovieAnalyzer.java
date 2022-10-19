@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 public class MovieAnalyzer {
     List<Movie> movieList;
-
     public MovieAnalyzer(String dataset_path) {
         try {
             FileInputStream fileInputStream = new FileInputStream(dataset_path);
