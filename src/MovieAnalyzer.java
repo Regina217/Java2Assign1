@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 public class MovieAnalyzer {
     List<Movie> movieList=new ArrayList<>();
 
-
     public MovieAnalyzer(String dataset_path) {
         try {
             FileInputStream fileInputStream = new FileInputStream(dataset_path);
@@ -76,7 +75,7 @@ public class MovieAnalyzer {
     public List<String> getTopMovies(int top_k, String by) {
         List<String> target = new ArrayList<>();
         if (by.equals("runtime")) {
-            List<Movie> temp= movieList.stream().filter((Movie e)-> {return String.valueOf(e.getRuntime())!=null;})
+            List<Movie> temp= movieList.stream().filter((Movie e)-> {return e.getRuntime()!=0;})
                     .sorted(Comparator.comparing(Movie::getRuntime).reversed()
                             .thenComparing(new Comparator<Movie>() {
                                 @Override
@@ -94,7 +93,7 @@ public class MovieAnalyzer {
             }
             return target;
         } else if (by.equals("overview")) {
-            List<Movie> temp=movieList.stream().filter((Movie e)-> {return e.getOverview()!=null;})
+            List<Movie> temp=movieList.stream().filter((Movie e)-> {return !e.getOverview().equals("");})
                     .sorted(Comparator.comparing((Movie e) -> {return e.getOverview().length();})
                             .reversed().thenComparing(new Comparator<Movie>() {
                                 @Override
@@ -120,8 +119,8 @@ public class MovieAnalyzer {
         IdentityHashMap<String, Long> g = new IdentityHashMap<>();
         for (Movie m : movieList) {
             for (String star : m.getStarList()) {
-                if(star!=null&&String.valueOf(m.getIMDB_Rating())!=null){r.put(star, m.getIMDB_Rating());}
-                if(star!=null&&String.valueOf(m.getGross())!=null){g.put(star, m.getGross());}
+                if(!star.equals("")&&!String.valueOf(m.getIMDB_Rating()).equals("")){r.put(star, m.getIMDB_Rating());}
+                if(!star.equals("")&&m.getGross()!=0){g.put(star, m.getGross());}
             }
         }
         if (by.equals("rating")) {
@@ -142,8 +141,7 @@ public class MovieAnalyzer {
             }
         }
         if (by.equals("gross")) {
-            List<Map.Entry<String, Double>> temp = new ArrayList<>(g.entrySet().stream()
-                    .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.averagingLong(Map.Entry::getValue))).entrySet());
+            List<Map.Entry<String, Double>> temp = new ArrayList<>(g.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.averagingDouble(Map.Entry::getValue))).entrySet());
             List<Map.Entry<String, Double>> targetList=temp.stream()
                     .sorted(Comparator.comparing((Map.Entry<String, Double> e) -> e.getValue())
                             .reversed().thenComparing((o1, o2) -> {
@@ -163,8 +161,9 @@ public class MovieAnalyzer {
 
     public List<String> searchMovies(String genre, float min_rating, int max_runtime) {
         List<String> target = new ArrayList<>();
-        List<Movie> targetList= movieList.stream().filter((Movie e)-> {return e.getGenre()!=null&&String.valueOf(e.getRuntime())!=null&&String.valueOf(e.getIMDB_Rating())!=null;})
-                .filter(e -> e.getIMDB_Rating() >= min_rating && e.getRuntime() <= max_runtime && Arrays.asList(e.getGenre()).contains(genre))
+        List<Movie> targetList= movieList.stream()
+                .filter((Movie e)-> {return !e.getGenre().equals("")&&e.getRuntime()!=0&&e.getIMDB_Rating()!=0;})
+                .filter(e -> e.getIMDB_Rating() >= min_rating && e.getRuntime() <= max_runtime && contain(e.getGenre(),genre))
                 .sorted(new Comparator<Movie>() {
                     @Override
                     public int compare(Movie o1, Movie o2) {
@@ -172,7 +171,7 @@ public class MovieAnalyzer {
                         for (int i = 0; i < l; i++) {
                             if(o1.getSeries_Title().charAt(i)-o2.getSeries_Title().charAt(i)!=0)  return o1.getSeries_Title().charAt(i)-o2.getSeries_Title().charAt(i);
                         }
-                        return 0;
+                        return o1.getSeries_Title().length()-o2.getSeries_Title().length();
                     }
                 })
                 .collect(Collectors.toList());
@@ -182,13 +181,23 @@ public class MovieAnalyzer {
         return target;
     }
 
+    public static boolean contain(ArrayList list,String s){
+        String[] a=s.split(",");
+        for (String e:a) {
+            if(list.contains(e)) return true;
+        }
+        return false;
+    }
+
+
     public static boolean nameFirst(String o1,String o2){
         int l=Math.min(o1.length(),o2.length());
         for (int i = 0; i < l; i++) {
             if(o1.charAt(i)-o2.charAt(i)<0)  return true;
             if(o1.charAt(i)-o2.charAt(i)>0)  return false;
         }
-        return true;
+        if(o1.length()<o2.length())return true;
+        else return false;
     }
     public class Movie {
         String Series_Title;
