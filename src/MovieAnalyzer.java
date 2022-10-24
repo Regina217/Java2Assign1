@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MovieAnalyzer {
-    List<Movie> movieList=new ArrayList<>();
+    List<Movie> movieList = new ArrayList<>();
 
     public MovieAnalyzer(String dataset_path) {
         try {
@@ -75,7 +75,7 @@ public class MovieAnalyzer {
     public List<String> getTopMovies(int top_k, String by) {
         List<String> target = new ArrayList<>();
         if (by.equals("runtime")) {
-            List<Movie> temp= movieList.stream().filter((Movie e)-> {return e.getRuntime()!=0;})
+            List<Movie> temp = movieList.stream().filter((Movie e) -> { return e.getRuntime()!=0; } )
                     .sorted(Comparator.comparing(Movie::getRuntime).reversed()
                             .thenComparing(new Comparator<Movie>() {
                                 @Override
